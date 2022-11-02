@@ -1,0 +1,14 @@
+name: LogInPlugin
+version: '${project.version}'
+main: com.render.loginplugin.LogInPlugin
+api-version: 1.18
+authors: [ render ]
+description: LogInPlugin登录插件
+commands:
+  login:
+    aliases:
+      - "lg"
+      - "l"
+      - "L"
+    description: "login or register" #描述
+    usage: "please use /login <PASSWORD>"  #用法
