@@ -11,6 +11,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Turtle;
 
+import java.util.function.Supplier;
+import java.util.logging.Level;
+
+import static com.render.loginplugin.LogInPlugin.logInPlugin;
+
 /**
  * @author Render
  * @ClassName logInCommandExecutor
@@ -18,23 +23,18 @@ import org.bukkit.entity.Turtle;
  */
 public class logInCommandExecutor implements CommandExecutor
 {
-
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
     {
+
         //指令发送者是玩家
         if (sender instanceof Player)
         {
             Player player = (Player) sender;
 
-
             String pwdConcat = String.join("<space>", args);
 
-            //如果玩家已经登陆
-            if (hasLogin(player))
-            {
-                return false;
-            }
+            //重复进入服务器逻辑在监听器
 
             //如果玩家注册过了
             if (hasRegister(player))
@@ -45,24 +45,24 @@ public class logInCommandExecutor implements CommandExecutor
             //如果玩家没有注册
             else
             {
-                playerRegister(player, pwdConcat);
+                //执行注册
+                return playerRegister(player, pwdConcat);
             }
         }
 
+        //发送指令者不是玩家
         return false;
     }
 
     private boolean playerLogin(Player player, String pwdConcat)
     {
-        player.sendMessage("--请输入您的密码--");
         //验证密码正确与否
         if (LogInPluginAPI.isPassword(player.getName(), pwdConcat))
         {
             player.sendMessage(ChatColor.GREEN + "---------密码正确---------");
-
-            //解锁账号
-            LoginDate.removePlayerName(player.getName());
             player.sendMessage(ChatColor.GREEN + "--------您的帐号已解锁----------");
+            //将玩家的名字添加进 playerLoginInfo
+            LoginDate.addPlayerName(player.getName());
 
             DengLuLogInEvent event = new DengLuLogInEvent(player);
             Bukkit.getPluginManager().callEvent(event);
@@ -76,15 +76,16 @@ public class logInCommandExecutor implements CommandExecutor
         }
     }
 
-    private void playerRegister(Player player, String pwdConcat)
+    private boolean playerRegister(Player player, String pwdConcat)
     {
-        player.sendMessage(ChatColor.GREEN + "您还没有注册,\n 请输入/login <password>注册");
-
         LogInPluginAPI.register(player.getName(), pwdConcat);
-
-        LoginDate.removePlayerName(player.getName());
-        //解锁玩家
         player.sendMessage(ChatColor.GREEN + "-----注册成功-----");
+        LoginDate.addPlayerName(player.getName());
+
+        DengLuLogInEvent event = new DengLuLogInEvent(player);
+        Bukkit.getPluginManager().callEvent(event);
+
+        return true;
     }
 
     //玩家是否注册
